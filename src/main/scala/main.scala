@@ -218,7 +218,7 @@ object main {
 
       SimpleLogger.info(s"The Data Has Been Calculated Successfully")
 
-      products_prices
+      products_prices 
     }
     catch {
       case e: Exception =>
