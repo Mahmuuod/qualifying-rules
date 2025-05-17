@@ -150,11 +150,7 @@ object main {
 
     def channelCalculate(order: (Timestamp, String, Date, Int, Double, Int, String, Double, String, String)): Double = {
       val quantity = order._4
-      val discount: Double = if (quantity < 6) 0.05
-      else if (quantity < 10) 0.1
-      else if (quantity < 15) 0.15
-      else 0.2
-
+      val discount: Double = (Math.ceil(quantity.toDouble / 5) * 5 * 0.01).min(0.5)
       discount
 
     }
@@ -216,11 +212,9 @@ object main {
 
       val products = (orders).map(x => x._2)
 
-      val products_prices = products.zip(final_price).zip(final_discount).zip(product_prices).map { case (((product, fPrice), tPrice), discount) =>
+      val products_prices = products.zip(product_prices).zip(final_discount).zip( final_price).map { case (((product, fPrice), tPrice), discount) =>
         (product, fPrice.toDouble, tPrice.toDouble, discount.toDouble)
       }
-
-      (products_prices).foreach(println)
 
       SimpleLogger.info(s"The Data Has Been Calculated Successfully")
 
@@ -269,9 +263,10 @@ object main {
         pstmt.setDouble(2, original)
         pstmt.setDouble(3, discount)
         pstmt.setDouble(4, finalPrice)
-        pstmt.executeUpdate()
-
+        pstmt.addBatch()
       }
+
+      pstmt.executeBatch() // ← sends all at once
 
       SimpleLogger.info(s"The Data Has Been Written to DB Successfully")
     } catch {
