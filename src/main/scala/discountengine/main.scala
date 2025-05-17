@@ -6,9 +6,9 @@ object main {
   def main(args: Array[String]): Unit = {
     // create logger instance with log file path
     val logger = SimpleLogger("./logs/application.log")
- 
+
     // load and preprocess orders from CSV file
-    val orders = OrderParser.loadOrders("D:/study/iti/Scala/scala-iti45/Project/TRX1000.csv")
+    val orders = OrderParser.loadOrders("./TRX1000.csv")
 
     // get all discount rules (qualifier and calculation pairs)
     val rules = DiscountRules.all
