@@ -8,27 +8,42 @@ import java.time.Instant
 import scala.io.Source
 
 object OrderParser {
+  /**
+   * Reads orders from a CSV file and transforms them into tuples with extra fields.
+   * Each order is enriched with:
+   * - daysBetween (expiry - transaction date)
+   * - wineCheese category (first word of product name)
+   * - total amount (quantity * unitPrice)
+   *
+   * @param path Path to the CSV file
+   * @return List of enriched order tuples
+   */
   def loadOrders(path: String): List[(Timestamp, String, Date, Int, Double, Int, String, Double, String, String)] = {
     val dateFormat = new SimpleDateFormat("yyyy-MM-dd")
 
     val lines = Source.fromFile(path).getLines().toList.tail
 
-    lines.map { line =>
-      val y = line.split(",")
+    val orders = lines.map(x => {
+      val y = x.split(",")
+
+      //converting to time stamp
       val instant = Instant.parse(y(0))
       val timestamp = Timestamp.from(instant)
-      val productName = y(1)
-      val expiryDate = dateFormat.parse(y(2))
-      val quantity = y(3).toInt
-      val unitPrice = y(4).toDouble
-      val channel = y(5)
-      val paymentMethod = y(6)
-      val transactionDate = new Date(timestamp.getTime)
-      val daysBetween = ((expiryDate.getTime - transactionDate.getTime) / (1000 * 60 * 60 * 24)).toInt
-      val wineCheese = productName.split(" ")(0)
-      val total = quantity * unitPrice
 
-      (timestamp, productName, expiryDate, quantity, unitPrice, daysBetween, wineCheese, total, channel, paymentMethod)
-    }
+      val product_name = y(1)
+      val expiry_date: Date = dateFormat.parse(y(2))
+      val quantity = y(3).toInt
+      val unit_price = y(4).toDouble
+      val transaction_date: Date = new Date(timestamp.getTime)
+      val daysBetween = (expiry_date.getTime - transaction_date.getTime) / (1000 * 60 * 60 * 24)
+      val wine_cheese = y(1).split(" ")(0)
+      val channel = y(5)
+      val payment_method = y(6)
+      val total = quantity.toDouble * unit_price
+
+      (timestamp, product_name, expiry_date, quantity, unit_price, daysBetween.toInt, wine_cheese, total, channel, payment_method)
+    })
+
+    orders
   }
 }

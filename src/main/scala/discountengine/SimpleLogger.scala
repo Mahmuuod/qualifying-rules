@@ -1,11 +1,17 @@
-// File: src/main/scala/SimpleLogger.scala
+// File: src/main/scala/discountengine/SimpleLogger.scala
 package discountengine
 
 import java.io.{FileWriter, PrintWriter}
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
+/**
+ * A simple file logger that logs INFO, DEBUG, WARN, and ERROR messages to console and a file.
+ *
+ * @param logFilePath path to the log file
+ */
 case class SimpleLogger(logFilePath: String) {
+
   private val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
 
   private def writeToLog(level: String, message: String): Unit = {

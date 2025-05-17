@@ -4,7 +4,20 @@ package discountengine
 import java.sql.{Connection, DriverManager, PreparedStatement}
 
 object DatabaseWriter {
-  def writeToPostgres(data: List[(String, Double, Double, Double)], logger: SimpleLogger): Unit = {
+
+  /**
+   * Writes the result data to PostgreSQL database.
+   * - Connects to DB
+   * - Creates table if it doesn't exist
+   * - Performs batch insertion
+   * - Uses logger for status updates and error tracking
+   *
+   * @param result List of (product_name, original_price, final_price, discount)
+   * @param logger Logger instance to log events
+   */
+  def writeToPostgres(result: List[(String, Double, Double, Double)], logger: SimpleLogger): Unit = {
+
+    // DB credentials and URL
     val url = "jdbc:postgresql://localhost:5432/postgres"
     val username = "postgres"
     val password = "123"
@@ -12,9 +25,11 @@ object DatabaseWriter {
     var connection: Connection = null
 
     try {
+      // Step 1: Connect to the database
       connection = DriverManager.getConnection(url, username, password)
-      logger.info("Connected to PostgreSQL!")
+      println("Connected to PostgreSQL!")
 
+      // Step 2: Create table if not exists
       val createTableSQL =
         """
           |CREATE TABLE IF NOT EXISTS product_discounts (
@@ -29,11 +44,13 @@ object DatabaseWriter {
       val stmt = connection.createStatement()
       stmt.execute(createTableSQL)
 
+      // Step 3: Prepare insert SQL
       val insertSQL =
         "INSERT INTO product_discounts (product_name, original_price, discount, final_price) VALUES (?, ?, ?, ?)"
       val pstmt: PreparedStatement = connection.prepareStatement(insertSQL)
 
-      for ((product, original, discount, finalPrice) <- data) {
+      // Step 4: Add each product row to batch
+      for ((product, original, discount, finalPrice) <- result) {
         pstmt.setString(1, product)
         pstmt.setDouble(2, original)
         pstmt.setDouble(3, discount)
@@ -41,13 +58,16 @@ object DatabaseWriter {
         pstmt.addBatch()
       }
 
+      // Step 5: Execute batch insert
       pstmt.executeBatch()
       logger.info("The Data Has Been Written to DB Successfully")
+
     } catch {
       case e: Exception =>
         logger.error("An error occurred on Writing to DB: " + e.getMessage)
         e.printStackTrace()
     } finally {
+      // Step 6: Close DB connection if open
       if (connection != null) connection.close()
     }
   }
